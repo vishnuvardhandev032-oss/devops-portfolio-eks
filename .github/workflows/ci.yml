@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+
+jobs:
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: |
+          cd app
+          docker build -t portfolio-api:ci .
+
+      - name: Smoke test container
+        run: |
+          cd app
+          docker run -d --name api -p 8080:8080 -e APP_VERSION=ci portfolio-api:ci
+          sleep 3
+          curl -f http://localhost:8080/health
+          curl -f http://localhost:8080/version
+          docker rm -f api
